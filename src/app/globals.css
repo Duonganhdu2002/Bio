@@ -1,0 +1,485 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-roboto-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Chừa khoảng trên khi nhảy tới anchor để header sticky (h-16 = 4rem) không che tiêu đề. */
+:target,
+section[id] {
+  scroll-margin-top: 5rem;
+}
+
+/* Tôn trọng người dùng tắt hiệu ứng chuyển động. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: rgba(139, 92, 246, 0.25);
+}
+
+:focus-visible {
+  outline: 2px solid rgb(113 113 122);
+  outline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :focus-visible {
+    outline-color: rgb(161 161 170);
+  }
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.89 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* =========================================================================
+   THEME "Địa Trung Hải hiện đại" cho khu vực DASHBOARD.
+   Áp class `.theme-med` lên gốc dashboard (AppShell). Ghi đè token semantic
+   (background/card/primary/sidebar/chart…) bằng bảng màu của trang chủ:
+   cát/kem (nền), đất nung terracotta (chính), xanh biển Aegean + ô liu (phụ).
+   Mọi component dùng token (Card, Button, Sidebar…) tự đổi giao diện.
+   ========================================================================= */
+
+.theme-med {
+  --radius: 0.85rem;
+
+  --background: #f6eedf;
+  --foreground: #2c2620;
+  --card: #fffdf8;
+  --card-foreground: #2c2620;
+  --popover: #fffdf8;
+  --popover-foreground: #2c2620;
+
+  --primary: #c0623c;
+  --primary-foreground: #fbf5ea;
+  --secondary: #f1e4d2;
+  --secondary-foreground: #4a4239;
+  --muted: #efe6d5;
+  --muted-foreground: #897f6d;
+  --accent: #ecdfc8;
+  --accent-foreground: #a8512f;
+
+  --destructive: #b4452c;
+  --border: #e6d6bc;
+  --input: #e2d0b4;
+  --ring: #c0623c;
+
+  --chart-1: #c0623c;
+  --chart-2: #1e6e89;
+  --chart-3: #7e8a4f;
+  --chart-4: #d98a5e;
+  --chart-5: #5ea0b3;
+
+  --sidebar: #ecdcc1;
+  --sidebar-foreground: #4a4239;
+  --sidebar-primary: #c0623c;
+  --sidebar-primary-foreground: #fbf5ea;
+  --sidebar-accent: #e3d2b4;
+  --sidebar-accent-foreground: #a8512f;
+  --sidebar-border: #ddcaa9;
+  --sidebar-ring: #c0623c;
+}
+
+/* Card: nền kem chuyển sắc nhẹ, viền ấm, bo góc mềm, đổ bóng dịu — gợi
+   tường vôi rám nắng vùng Địa Trung Hải. */
+.theme-med [data-slot="card"] {
+  border-radius: 1.25rem;
+  border-color: #ece0cb;
+  background-image: linear-gradient(180deg, #fffefb 0%, #fdf8ee 100%);
+  box-shadow:
+    0 1px 2px rgba(44, 38, 32, 0.04),
+    0 24px 48px -34px rgba(44, 38, 32, 0.5);
+}
+
+/* Tiêu đề card: chữ ấm, có sức nặng vừa phải. */
+.theme-med [data-slot="card-title"] {
+  letter-spacing: -0.01em;
+}
+
+/* Footer card hoà nền card thay vì xám lạnh. */
+.theme-med [data-slot="card-footer"] {
+  background-color: #f7efe0;
+  border-color: #ece0cb;
+}
+
+/* Ô nhập & switch lấy tông ấm. */
+.theme-med [data-slot="input"] {
+  background-color: #fffdf8;
+}
+
+/* Mục điều hướng đang chọn: nền cát + thanh đất nung bên trái. */
+.theme-med [data-slot="sidebar-menu-button"][data-active] {
+  font-weight: 600;
+  position: relative;
+}
+.theme-med [data-slot="sidebar-menu-button"][data-active]::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  height: 58%;
+  width: 3px;
+  transform: translateY(-50%);
+  border-radius: 9999px;
+  background: var(--primary);
+}
+
+/* =========================================================================
+   THEME PRESET cho trang public bio (`profiles.theme`) — Agent 7 sở hữu.
+   Áp qua class `bio-theme-<key>` (xem `getBioTheme` ở `components/bio/theme.ts`)
+   trên container `<main>` của trang public. Mỗi preset gán đè token oklch +
+   nền trong phạm vi subtree → mọi component bio (bg-card/text-foreground/
+   bg-primary…) tự đổi giao diện, không cần sửa. Khóa khớp contract:
+   default | dark | gradient | minimal | neon.
+   ========================================================================= */
+
+[class*="bio-theme-"] {
+  background: var(--bio-page-background, var(--background));
+  background-attachment: fixed;
+  color: var(--foreground);
+}
+
+.bio-theme-default {
+  --background: oklch(0.99 0.006 292);
+  --foreground: oklch(0.205 0.02 292);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.205 0.02 292);
+  --primary: oklch(0.541 0.281 293.009);
+  --primary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.97 0.006 292);
+  --muted-foreground: oklch(0.556 0.02 292);
+  --accent: oklch(0.969 0.016 293.756);
+  --accent-foreground: oklch(0.435 0.24 292.745);
+  --border: oklch(0.91 0.01 292);
+  --ring: oklch(0.606 0.25 292.717);
+  --bio-page-background: linear-gradient(
+    180deg,
+    oklch(0.97 0.03 293),
+    oklch(1 0 0) 55%
+  );
+}
+
+.bio-theme-dark {
+  --background: oklch(0.16 0.012 290);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.014 290);
+  --card-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.606 0.25 292.717);
+  --primary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.27 0.012 290);
+  --muted-foreground: oklch(0.72 0.02 290);
+  --accent: oklch(0.31 0.06 293);
+  --accent-foreground: oklch(0.943 0.029 294.588);
+  --border: oklch(1 0 0 / 12%);
+  --ring: oklch(0.541 0.281 293.009);
+  --bio-page-background: linear-gradient(
+    180deg,
+    oklch(0.22 0.04 293),
+    oklch(0.14 0.01 290) 60%
+  );
+}
+
+.bio-theme-gradient {
+  --foreground: oklch(0.99 0 0);
+  --card: oklch(1 0 0 / 13%);
+  --card-foreground: oklch(0.99 0 0);
+  --primary: oklch(1 0 0);
+  --primary-foreground: oklch(0.4 0.2 320);
+  --muted: oklch(1 0 0 / 12%);
+  --muted-foreground: oklch(0.99 0 0 / 80%);
+  --accent: oklch(1 0 0 / 18%);
+  --accent-foreground: oklch(0.99 0 0);
+  --border: oklch(1 0 0 / 24%);
+  --ring: oklch(1 0 0 / 70%);
+  --bio-page-background: linear-gradient(
+    155deg,
+    oklch(0.62 0.24 300),
+    oklch(0.66 0.2 348) 45%,
+    oklch(0.74 0.16 28)
+  );
+}
+
+/* Hiệu ứng kính cho preset gradient: card + link mờ nền, viền sáng */
+.bio-theme-gradient [data-slot="card"],
+.bio-theme-gradient [data-slot="bio-link"] {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.bio-theme-minimal {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.2 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0 0);
+  --primary: oklch(0.2 0 0);
+  --primary-foreground: oklch(0.99 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.96 0 0);
+  --accent-foreground: oklch(0.2 0 0);
+  --border: oklch(0.88 0 0);
+  --ring: oklch(0.7 0 0);
+  --radius: 0.25rem;
+  --bio-page-background: oklch(1 0 0);
+}
+
+/* Preset minimal: phẳng, bỏ đổ bóng để tối giản */
+.bio-theme-minimal [data-slot="card"],
+.bio-theme-minimal [data-slot="bio-link"] {
+  box-shadow: none;
+}
+
+.bio-theme-neon {
+  --background: oklch(0.13 0.02 282);
+  --foreground: oklch(0.96 0.03 190);
+  --card: oklch(0.17 0.03 282);
+  --card-foreground: oklch(0.96 0.03 190);
+  --primary: oklch(0.72 0.2 330);
+  --primary-foreground: oklch(0.12 0.02 282);
+  --muted: oklch(0.22 0.03 282);
+  --muted-foreground: oklch(0.72 0.06 200);
+  --accent: oklch(0.26 0.07 300);
+  --accent-foreground: oklch(0.86 0.16 190);
+  --border: oklch(0.7 0.2 322 / 45%);
+  --ring: oklch(0.72 0.2 330);
+  --bio-page-background: radial-gradient(
+      120% 80% at 50% -10%,
+      oklch(0.3 0.12 320 / 60%),
+      transparent 60%
+    ),
+    oklch(0.11 0.02 282);
+}
+
+/* Preset neon: link/card phát sáng nhẹ theo accent */
+.bio-theme-neon [data-slot="bio-link"] {
+  box-shadow: 0 0 0 1px var(--border), 0 0 18px -6px oklch(0.72 0.2 330 / 70%);
+}
+
+/* Dashboard appearance preview: nền gắn với khung preview, không fixed theo viewport */
+.appearance-preview[class*="bio-theme-"] {
+  background: var(--bio-page-background, var(--background));
+  background-attachment: scroll;
+}
+
+/* Token bio theme ưu tiên hơn theme-med của dashboard trong khung xem trước */
+.theme-med .appearance-preview.bio-theme-default {
+  --background: oklch(0.99 0.006 292);
+  --foreground: oklch(0.205 0.02 292);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.205 0.02 292);
+  --primary: oklch(0.541 0.281 293.009);
+  --primary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.97 0.006 292);
+  --muted-foreground: oklch(0.556 0.02 292);
+  --accent: oklch(0.969 0.016 293.756);
+  --accent-foreground: oklch(0.435 0.24 292.745);
+  --border: oklch(0.91 0.01 292);
+  --ring: oklch(0.606 0.25 292.717);
+  --bio-page-background: linear-gradient(180deg, oklch(0.97 0.03 293), oklch(1 0 0) 55%);
+}
+
+.theme-med .appearance-preview.bio-theme-dark {
+  --background: oklch(0.16 0.012 290);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.014 290);
+  --card-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.606 0.25 292.717);
+  --primary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.27 0.012 290);
+  --muted-foreground: oklch(0.72 0.02 290);
+  --accent: oklch(0.31 0.06 293);
+  --accent-foreground: oklch(0.943 0.029 294.588);
+  --border: oklch(1 0 0 / 12%);
+  --ring: oklch(0.541 0.281 293.009);
+  --bio-page-background: linear-gradient(180deg, oklch(0.22 0.04 293), oklch(0.14 0.01 290) 60%);
+}
+
+.theme-med .appearance-preview.bio-theme-gradient {
+  --foreground: oklch(0.99 0 0);
+  --card: oklch(1 0 0 / 13%);
+  --card-foreground: oklch(0.99 0 0);
+  --primary: oklch(1 0 0);
+  --primary-foreground: oklch(0.4 0.2 320);
+  --muted: oklch(1 0 0 / 12%);
+  --muted-foreground: oklch(0.99 0 0 / 80%);
+  --accent: oklch(1 0 0 / 18%);
+  --accent-foreground: oklch(0.99 0 0);
+  --border: oklch(1 0 0 / 24%);
+  --ring: oklch(1 0 0 / 70%);
+  --bio-page-background: linear-gradient(
+    155deg,
+    oklch(0.62 0.24 300),
+    oklch(0.66 0.2 348) 45%,
+    oklch(0.74 0.16 28)
+  );
+}
+
+.theme-med .appearance-preview.bio-theme-minimal {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.2 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0 0);
+  --primary: oklch(0.2 0 0);
+  --primary-foreground: oklch(0.99 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.96 0 0);
+  --accent-foreground: oklch(0.2 0 0);
+  --border: oklch(0.88 0 0);
+  --ring: oklch(0.7 0 0);
+  --bio-page-background: oklch(1 0 0);
+}
+
+.theme-med .appearance-preview.bio-theme-neon {
+  --background: oklch(0.13 0.02 282);
+  --foreground: oklch(0.96 0.03 190);
+  --card: oklch(0.17 0.03 282);
+  --card-foreground: oklch(0.96 0.03 190);
+  --primary: oklch(0.72 0.2 330);
+  --primary-foreground: oklch(0.12 0.02 282);
+  --muted: oklch(0.22 0.03 282);
+  --muted-foreground: oklch(0.72 0.06 200);
+  --accent: oklch(0.26 0.07 300);
+  --accent-foreground: oklch(0.86 0.16 190);
+  --border: oklch(0.7 0.2 322 / 45%);
+  --ring: oklch(0.72 0.2 330);
+  --bio-page-background: radial-gradient(
+      120% 80% at 50% -10%,
+      oklch(0.3 0.12 320 / 60%),
+      transparent 60%
+    ),
+    oklch(0.11 0.02 282);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
