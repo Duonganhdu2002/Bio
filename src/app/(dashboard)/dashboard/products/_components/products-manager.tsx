@@ -24,7 +24,7 @@ import { formatPrice } from "@/components/bio/price";
 import { queryKeys } from "@/lib/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import type { Product, ProductCategory } from "@/lib/types";
+import type { Product, ProductCategory, ProfileBanner } from "@/lib/types";
 import {
   createProduct,
   deleteProduct,
@@ -50,6 +50,19 @@ async function fetchProducts(profileId: string): Promise<Product[]> {
   return (data ?? []) as Product[];
 }
 
+async function fetchBanners(profileId: string): Promise<ProfileBanner[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("profile_banners")
+    .select("*")
+    .eq("profile_id", profileId)
+    .order("section")
+    .order("position")
+    .order("created_at");
+  if (error) throw error;
+  return (data ?? []) as ProfileBanner[];
+}
+
 function applyPinned(products: Product[], ids: string[]): Product[] {
   return products.map((p) => {
     const idx = ids.indexOf(p.id);
@@ -61,10 +74,12 @@ function applyPinned(products: Product[], ids: string[]): Product[] {
 export function ProductsManager({
   initialProducts,
   initialCategories,
+  initialBanners,
   profileId,
 }: {
   initialProducts: Product[];
   initialCategories: ProductCategory[];
+  initialBanners: ProfileBanner[];
   profileId: string;
 }) {
   const qc = useQueryClient();
@@ -96,9 +111,27 @@ export function ProductsManager({
     initialData: initialCategories,
   });
 
+  const { data: banners = initialBanners } = useQuery({
+    queryKey: queryKeys.banners,
+    queryFn: () => fetchBanners(profileId),
+    initialData: initialBanners,
+  });
+
+  const brandOptions = useMemo(
+    () =>
+      banners
+        .filter((b) => (b.section ?? "for_you") === "brand")
+        .sort((a, b) => a.position - b.position || a.created_at.localeCompare(b.created_at)),
+    [banners],
+  );
+
   const categoryMap = useMemo(
     () => new Map(categories.map((c) => [c.id, c.name])),
     [categories],
+  );
+  const brandMap = useMemo(
+    () => new Map(brandOptions.map((b) => [b.id, b.name])),
+    [brandOptions],
   );
 
   const pinned = useMemo(
@@ -314,6 +347,11 @@ export function ProductsManager({
               {categoryMap.get(product.category_id)}
             </p>
           ) : null}
+          {product.brand_id && brandMap.get(product.brand_id) ? (
+            <p className="text-xs text-muted-foreground">
+              Brand: {brandMap.get(product.brand_id)}
+            </p>
+          ) : null}
           {priceLabel ? (
             <p className="text-xs text-muted-foreground">{priceLabel}</p>
           ) : null}
@@ -428,6 +466,7 @@ export function ProductsManager({
         initial={editing}
         profileId={profileId}
         categories={categories}
+        brands={brandOptions}
         pending={createMut.isPending || updateMut.isPending}
         error={formError}
         onSubmit={handleSubmit}

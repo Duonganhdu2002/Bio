@@ -12,7 +12,8 @@ import { ShopProductTile } from "./shop-product-tile";
 import { ShopSectionHeader } from "./shop-section-header";
 import { ShopStoreHeader } from "./shop-store-header";
 import { ShopTabBar, type ShopTab } from "./shop-tab-bar";
-import { buildCategoryNav } from "./product-utils";
+import { buildBrandNav, buildCategoryNav } from "./product-utils";
+import { normalizeCategorySection } from "@/lib/category-section";
 import type {
   PublicBanner,
   PublicLink,
@@ -124,8 +125,8 @@ export function ShopLayout({
     [products, categories],
   );
   const brandNavItems = useMemo(
-    () => buildCategoryNav(products, categories, "brand"),
-    [products, categories],
+    () => buildBrandNav(products, banners),
+    [products, banners],
   );
   const navItems = useMemo(
     () => [...productNavItems, ...brandNavItems],
@@ -139,13 +140,27 @@ export function ShopLayout({
 
   const categoryProducts = useMemo(() => {
     if (!activeCategory) return [];
+
     if (activeCategory === "none") {
+      const productCategoryIds = new Set(
+        categories
+          .filter((c) => normalizeCategorySection(c.section) === "product")
+          .map((c) => c.id),
+      );
       return filteredProducts.filter(
-        (p) => !p.category_id || !categories.some((c) => c.id === p.category_id),
+        (p) => !p.category_id || !productCategoryIds.has(p.category_id),
       );
     }
+
+    const isBrand = banners.some(
+      (b) => b.id === activeCategory && (b.section ?? "for_you") === "brand",
+    );
+    if (isBrand) {
+      return filteredProducts.filter((p) => p.brand_id === activeCategory);
+    }
+
     return filteredProducts.filter((p) => p.category_id === activeCategory);
-  }, [activeCategory, filteredProducts, categories]);
+  }, [activeCategory, filteredProducts, categories, banners]);
 
   const activeCategoryLabel =
     navItems.find((item) => item.key === activeCategory)?.label ?? "Danh mục";

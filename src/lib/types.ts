@@ -56,6 +56,7 @@ export interface Product {
   currency: string;
   url: string | null;
   category_id: string | null;
+  brand_id: string | null;
   position: number;
   is_pinned: boolean;
   pinned_position: number | null;

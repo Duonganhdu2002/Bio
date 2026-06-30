@@ -84,7 +84,7 @@ function BannerSectionPanel({
       <CardContent className="p-0">
         {items.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Chưa có banner trong mục này.
+            {section === "brand" ? "Chưa có brand nào." : "Chưa có banner trong mục này."}
           </p>
         ) : (
           <ul className="divide-y divide-border">
@@ -116,7 +116,7 @@ function BannerSectionPanel({
                         {meta.label}
                       </Badge>
                     </div>
-                    {banner.url ? (
+                    {section === "brand" ? null : banner.url ? (
                       <p className="truncate text-xs text-muted-foreground">{banner.url}</p>
                     ) : (
                       <p className="text-xs text-muted-foreground">Không có liên kết</p>
@@ -361,10 +361,12 @@ export function BannersManager({
       <ConfirmDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-        title="Xoá banner?"
+        title={deleteTarget?.section === "brand" ? "Xoá brand?" : "Xoá banner?"}
         description={
           deleteTarget
-            ? `Banner “${deleteTarget.name}” sẽ bị xoá khỏi trang cửa hàng.`
+            ? deleteTarget.section === "brand"
+              ? `Brand “${deleteTarget.name}” sẽ bị xoá. Sản phẩm gán brand này sẽ mất liên kết.`
+              : `Banner “${deleteTarget.name}” sẽ bị xoá khỏi trang cửa hàng.`
             : undefined
         }
         pending={deleteMut.isPending}

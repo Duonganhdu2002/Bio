@@ -79,6 +79,7 @@ export default async function ContentPage() {
           <ProductsManager
             initialProducts={products}
             initialCategories={categories}
+            initialBanners={banners}
             profileId={profile.id}
           />
         </ContentSection>
@@ -98,14 +99,8 @@ export default async function ContentPage() {
         <ContentSection
           id="brand"
           title="Brand"
-          description="Danh mục và banner thương hiệu đối tác trên trang cửa hàng."
+          description="Thương hiệu đối tác trên trang cửa hàng — dùng chung cho banner và gán sản phẩm."
         >
-          <CategoriesManager
-            initialCategories={categories}
-            profileId={profile.id}
-            sections={["brand"]}
-            hideHeading
-          />
           <BannersManager
             initialBanners={banners}
             profileId={profile.id}

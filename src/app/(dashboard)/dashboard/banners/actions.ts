@@ -35,10 +35,11 @@ export async function createBanner(input: BannerInput): Promise<ActionResult<Pro
   if (!ctx) return fail(NOT_AUTH);
 
   const name = input.name.trim();
-  if (!name) return fail("Vui lòng nhập tên chiến dịch.");
+  const isBrand = input.section === "brand";
+  if (!name) return fail(isBrand ? "Vui lòng nhập tên brand." : "Vui lòng nhập tên chiến dịch.");
 
   const imageUrl = input.imageUrl.trim();
-  if (!imageUrl) return fail("Vui lòng tải ảnh banner lên.");
+  if (!imageUrl) return fail(isBrand ? "Vui lòng tải ảnh brand lên." : "Vui lòng tải ảnh banner lên.");
 
   let url: string | null = null;
   if (input.url?.trim()) {
@@ -84,10 +85,11 @@ export async function updateBanner(
   if (!ctx) return fail(NOT_AUTH);
 
   const name = input.name.trim();
-  if (!name) return fail("Vui lòng nhập tên chiến dịch.");
+  const isBrand = input.section === "brand";
+  if (!name) return fail(isBrand ? "Vui lòng nhập tên brand." : "Vui lòng nhập tên chiến dịch.");
 
   const imageUrl = input.imageUrl.trim();
-  if (!imageUrl) return fail("Vui lòng tải ảnh banner lên.");
+  if (!imageUrl) return fail(isBrand ? "Vui lòng tải ảnh brand lên." : "Vui lòng tải ảnh banner lên.");
 
   let url: string | null = null;
   if (input.url?.trim()) {

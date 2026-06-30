@@ -2,6 +2,7 @@
 
 import { ChevronRight } from "lucide-react";
 
+import { BANNER_SECTIONS } from "@/lib/banner-section";
 import { CATEGORY_SECTIONS } from "@/lib/category-section";
 import { ShopSectionHeader } from "./shop-section-header";
 import type { PublicProductCategory } from "./types";
@@ -64,7 +65,7 @@ export function ShopCategoryList({
   }
 
   const productMeta = CATEGORY_SECTIONS.find((s) => s.value === "product")!;
-  const brandMeta = CATEGORY_SECTIONS.find((s) => s.value === "brand")!;
+  const brandMeta = BANNER_SECTIONS.find((s) => s.value === "brand")!;
 
   return (
     <div className="pb-2">

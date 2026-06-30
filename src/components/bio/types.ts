@@ -39,6 +39,7 @@ export interface PublicPinnedProduct {
   currency: string;
   url: string | null;
   category_id: string | null;
+  brand_id: string | null;
   pinned_position: number;
 }
 
@@ -54,6 +55,7 @@ export interface PublicProduct {
   is_pinned: boolean;
   pinned_position: number | null;
   category_id: string | null;
+  brand_id: string | null;
 }
 
 export interface PublicBanner {

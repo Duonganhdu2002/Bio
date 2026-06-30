@@ -48,19 +48,34 @@ export function BannerFormDialog({
   error: string | null;
   onSubmit: (input: BannerInput) => void;
 }) {
+  const section = initial?.section ?? defaultSection;
+  const isBrand = section === "brand";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90svh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{initial ? "Sửa banner PR" : "Thêm banner PR"}</DialogTitle>
+          <DialogTitle>
+            {initial
+              ? isBrand
+                ? "Sửa brand"
+                : "Sửa banner PR"
+              : isBrand
+                ? "Thêm brand"
+                : "Thêm banner PR"}
+          </DialogTitle>
           <DialogDescription>
-            Tải ảnh và đặt tên chiến dịch (ví dụ: Niềng răng, Bệnh viện ABC).
+            {isBrand
+              ? "Tên thương hiệu và logo — dùng chung cho banner và gán sản phẩm."
+              : "Tải ảnh và đặt tên chiến dịch (ví dụ: Niềng răng, Bệnh viện ABC)."}
           </DialogDescription>
         </DialogHeader>
         <BannerFormFields
+          key={`${initial?.id ?? "new"}-${section}`}
           initial={initial}
           profileId={profileId}
           defaultSection={defaultSection}
+          isBrand={isBrand}
           pending={pending}
           error={error}
           onSubmit={onSubmit}
@@ -75,6 +90,7 @@ function BannerFormFields({
   initial,
   profileId,
   defaultSection,
+  isBrand,
   pending,
   error,
   onSubmit,
@@ -83,13 +99,16 @@ function BannerFormFields({
   initial: ProfileBanner | null;
   profileId: string;
   defaultSection: BannerSection;
+  isBrand: boolean;
   pending: boolean;
   error: string | null;
   onSubmit: (input: BannerInput) => void;
   onCancel: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
-  const [section, setSection] = useState<BannerSection>(initial?.section ?? defaultSection);
+  const [section, setSection] = useState<BannerSection>(
+    isBrand ? "brand" : (initial?.section ?? defaultSection),
+  );
   const [imageUrl, setImageUrl] = useState<string | null>(initial?.image_url ?? null);
   const [url, setUrl] = useState(initial?.url ?? "");
   const [isActive, setIsActive] = useState(initial?.is_active ?? true);
@@ -118,10 +137,86 @@ function BannerFormFields({
     onSubmit({
       name,
       imageUrl: imageUrl ?? "",
-      url: url.trim() || null,
-      section,
-      isActive,
+      url: isBrand ? null : url.trim() || null,
+      section: isBrand ? "brand" : section,
+      isActive: isBrand ? (initial?.is_active ?? true) : isActive,
     });
+  }
+
+  if (isBrand) {
+    return (
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="brand-name">Tên brand</Label>
+          <Input
+            id="brand-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Roborock, Joyoung, Bear..."
+            autoFocus
+            required
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>Ảnh brand</Label>
+          {imageUrl ? (
+            <div className="relative mx-auto aspect-square w-full max-w-40 overflow-hidden rounded-xl border border-border bg-muted">
+              <Image src={imageUrl} alt="" fill className="object-contain p-2" sizes="160px" />
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon-sm"
+                className="absolute top-2 right-2"
+                onClick={() => setImageUrl(null)}
+                aria-label="Xoá ảnh"
+              >
+                <X />
+              </Button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="mx-auto flex aspect-square w-full max-w-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/40 text-sm text-muted-foreground transition-colors hover:bg-muted/70 disabled:opacity-60"
+            >
+              {uploading ? (
+                <Loader2 className="size-5 animate-spin" />
+              ) : (
+                <ImagePlus className="size-5" />
+              )}
+              {uploading ? "Đang tải lên..." : "Chọn ảnh brand"}
+            </button>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleFile}
+          />
+          {uploadError ? (
+            <p className="text-xs text-destructive">{uploadError}</p>
+          ) : null}
+        </div>
+
+        {error ? (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        <DialogFooter>
+          <Button type="button" variant="outline" size="sm" disabled={pending} onClick={onCancel}>
+            Huỷ
+          </Button>
+          <Button type="submit" size="sm" disabled={pending || uploading || !imageUrl}>
+            {initial ? "Lưu thay đổi" : "Thêm brand"}
+          </Button>
+        </DialogFooter>
+      </form>
+    );
   }
 
   return (

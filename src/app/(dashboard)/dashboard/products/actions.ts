@@ -23,6 +23,7 @@ export type ProductInput = {
   currency: string;
   url: string | null;
   categoryId: string | null;
+  brandId: string | null;
   isActive: boolean;
 };
 
@@ -63,6 +64,7 @@ async function prepare(
   currency: string;
   url: string | null;
   category_id: string | null;
+  brand_id: string | null;
   is_active: boolean;
 }>> {
   const title = input.title.trim();
@@ -93,11 +95,22 @@ async function prepare(
   if (category_id) {
     const { data: cat } = await supabase
       .from("product_categories")
-      .select("id")
+      .select("id, section")
       .eq("id", category_id)
       .eq("profile_id", profileId)
       .maybeSingle();
-    if (!cat) return fail("Danh mục không hợp lệ.");
+    if (!cat || cat.section !== "product") return fail("Danh mục không hợp lệ.");
+  }
+
+  let brand_id: string | null = input.brandId || null;
+  if (brand_id) {
+    const { data: brand } = await supabase
+      .from("profile_banners")
+      .select("id, section")
+      .eq("id", brand_id)
+      .eq("profile_id", profileId)
+      .maybeSingle();
+    if (!brand || brand.section !== "brand") return fail("Brand không hợp lệ.");
   }
 
   return ok({
@@ -108,6 +121,7 @@ async function prepare(
     currency,
     url,
     category_id,
+    brand_id,
     is_active: input.isActive,
   });
 }

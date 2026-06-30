@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ImagePlus, Loader2, X } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -27,8 +28,39 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { isImportableProductUrl } from "@/lib/product-import/import";
 import { uploadImage } from "@/lib/storage/upload";
-import type { Product, ProductCategory } from "@/lib/types";
+import { normalizeCategorySection } from "@/lib/category-section";
+import type { Product, ProductCategory, ProfileBanner } from "@/lib/types";
 import { importProductFromUrl, type ProductInput } from "../actions";
+
+function splitProductTaxonomy(
+  initial: Product | null,
+  categories: ProductCategory[],
+  brands: ProfileBanner[],
+): { categoryId: string | null; brandId: string | null } {
+  const productCategoryIds = new Set(
+    categories
+      .filter((c) => normalizeCategorySection(c.section) === "product")
+      .map((c) => c.id),
+  );
+  const brandIds = new Set(brands.map((b) => b.id));
+
+  let categoryId = initial?.category_id ?? null;
+  let brandId = initial?.brand_id ?? null;
+
+  if (categoryId && !productCategoryIds.has(categoryId)) categoryId = null;
+  if (brandId && !brandIds.has(brandId)) brandId = null;
+
+  return { categoryId, brandId };
+}
+
+function optionLabel(
+  id: string | null,
+  options: { id: string; name: string }[],
+  emptyLabel: string,
+): string {
+  if (!id) return emptyLabel;
+  return options.find((c) => c.id === id)?.name ?? emptyLabel;
+}
 
 export function ProductFormDialog({
   open,
@@ -36,6 +68,7 @@ export function ProductFormDialog({
   initial,
   profileId,
   categories,
+  brands,
   pending,
   error,
   onSubmit,
@@ -45,6 +78,7 @@ export function ProductFormDialog({
   initial: Product | null;
   profileId: string;
   categories: ProductCategory[];
+  brands: ProfileBanner[];
   pending: boolean;
   error: string | null;
   onSubmit: (input: ProductInput) => void;
@@ -63,6 +97,7 @@ export function ProductFormDialog({
           initial={initial}
           profileId={profileId}
           categories={categories}
+          brands={brands}
           pending={pending}
           error={error}
           onSubmit={onSubmit}
@@ -77,6 +112,7 @@ function ProductFormFields({
   initial,
   profileId,
   categories,
+  brands,
   pending,
   error,
   onSubmit,
@@ -85,16 +121,23 @@ function ProductFormFields({
   initial: Product | null;
   profileId: string;
   categories: ProductCategory[];
+  brands: ProfileBanner[];
   pending: boolean;
   error: string | null;
   onSubmit: (input: ProductInput) => void;
   onCancel: () => void;
 }) {
+  const productCategories = categories.filter(
+    (c) => normalizeCategorySection(c.section) === "product",
+  );
+  const initialTaxonomy = splitProductTaxonomy(initial, categories, brands);
+
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [imageUrl, setImageUrl] = useState<string | null>(initial?.image_url ?? null);
   const [url, setUrl] = useState(initial?.url ?? "");
-  const [categoryId, setCategoryId] = useState<string | null>(initial?.category_id ?? null);
+  const [categoryId, setCategoryId] = useState<string | null>(initialTaxonomy.categoryId);
+  const [brandId, setBrandId] = useState<string | null>(initialTaxonomy.brandId);
   const [isActive, setIsActive] = useState(initial?.is_active ?? true);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -176,6 +219,7 @@ function ProductFormFields({
       price: null,
       currency: "VND",
       categoryId,
+      brandId,
       url: url || null,
       isActive,
     });
@@ -296,19 +340,21 @@ function ProductFormFields({
         />
       </div>
 
-      {categories.length > 0 ? (
+      {productCategories.length > 0 ? (
         <div className="space-y-1.5">
           <Label htmlFor="product-category">Danh mục</Label>
           <Select
             value={categoryId ?? "none"}
             onValueChange={(v) => setCategoryId(v === "none" ? null : v)}
           >
-            <SelectTrigger id="product-category">
-              <SelectValue placeholder="Chọn danh mục" />
+            <SelectTrigger id="product-category" className="w-full">
+              <SelectValue placeholder="Chọn danh mục">
+                {optionLabel(categoryId, productCategories, "Không phân loại")}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Không phân loại</SelectItem>
-              {categories.map((c) => (
+              {productCategories.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}
                 </SelectItem>
@@ -317,6 +363,44 @@ function ProductFormFields({
           </Select>
         </div>
       ) : null}
+
+      <div className="space-y-1.5">
+        <Label htmlFor="product-brand">Brand</Label>
+        {brands.length > 0 ? (
+          <Select
+            value={brandId ?? "none"}
+            onValueChange={(v) => setBrandId(v === "none" ? null : v)}
+          >
+            <SelectTrigger id="product-brand" className="w-full">
+              <SelectValue placeholder="Chọn brand">
+                {optionLabel(brandId, brands, "Không chọn")}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Không chọn</SelectItem>
+              {brands.map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  {b.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <p className="rounded-lg border border-dashed border-border px-3 py-2.5 text-sm text-muted-foreground">
+            Chưa có brand nào.{" "}
+            <Link
+              href="/dashboard/content#brand"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Thêm brand
+            </Link>{" "}
+            trong mục Nội dung → Brand.
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Tuỳ chọn — gán sản phẩm vào thương hiệu hợp tác.
+        </p>
+      </div>
 
       <Label className="flex items-center justify-between">
         <span>Hiển thị công khai</span>
