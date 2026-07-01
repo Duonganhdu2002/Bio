@@ -162,8 +162,21 @@ export function ShopLayout({
     return filteredProducts.filter((p) => p.category_id === activeCategory);
   }, [activeCategory, filteredProducts, categories, banners]);
 
-  const activeCategoryLabel =
-    navItems.find((item) => item.key === activeCategory)?.label ?? "Danh mục";
+  const activeCategoryLabel = useMemo(() => {
+    const nav = navItems.find((item) => item.key === activeCategory);
+    if (nav) return nav.label;
+    const brand = banners.find(
+      (b) => b.id === activeCategory && (b.section ?? "for_you") === "brand",
+    );
+    if (brand) return brand.name;
+    return "Danh mục";
+  }, [activeCategory, navItems, banners]);
+
+  const handleBrandSelect = (brandId: string) => {
+    setTab("categories");
+    setActiveCategory(brandId);
+    shouldScrollToPanelsRef.current = true;
+  };
 
   return (
     <div className="mx-auto w-full max-w-lg overflow-x-hidden bg-background [scrollbar-gutter:stable]">
@@ -193,7 +206,7 @@ export function ShopLayout({
       {tab === "shop" ? (
         <div className="flex flex-col divide-y divide-border/40">
           <ShopPinnedScroll profileId={profile.id} pinned={pinned} />
-          <ShopCampaignStrip banners={banners} />
+          <ShopCampaignStrip banners={banners} onBrandSelect={handleBrandSelect} />
         </div>
       ) : null}
 
@@ -237,7 +250,7 @@ export function ShopLayout({
         <section aria-label="Danh mục hàng">
           {activeCategory ? (
             <>
-              <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
+              <div className="flex items-center gap-2 px-4 py-2.5">
                 <Button
                   type="button"
                   variant="ghost"
@@ -252,7 +265,7 @@ export function ShopLayout({
               <ShopProductGrid
                 profileId={profile.id}
                 products={categoryProducts}
-                layout="scroll"
+                layout="grid"
                 emptyMessage="Chưa có sản phẩm trong danh mục này."
               />
             </>
