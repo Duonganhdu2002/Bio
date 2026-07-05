@@ -191,14 +191,40 @@ body {
   --chart-4: #d98a5e;
   --chart-5: #5ea0b3;
 
-  --sidebar: #ecdcc1;
+  --sidebar: #f4ebdb;
   --sidebar-foreground: #4a4239;
   --sidebar-primary: #c0623c;
   --sidebar-primary-foreground: #fbf5ea;
-  --sidebar-accent: #e3d2b4;
+  --sidebar-accent: #efe6d5;
   --sidebar-accent-foreground: #a8512f;
-  --sidebar-border: #ddcaa9;
+  --sidebar-border: #e6d6bc;
   --sidebar-ring: #c0623c;
+}
+
+/* Sidebar mobile (portal): giữ palette theme-med, không bị trắng mặc định. */
+.theme-med [data-slot="sheet-content"][data-mobile="true"] {
+  background: var(--sidebar);
+  border-color: var(--sidebar-border);
+  color: var(--sidebar-foreground);
+}
+
+/* Mục menu đang chọn: nền kem ấm thay vì xám lạnh. */
+.theme-med [data-slot="sidebar-menu-button"][data-active] {
+  font-weight: 600;
+  position: relative;
+  background-color: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
+}
+.theme-med [data-slot="sidebar-menu-button"][data-active]::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  height: 58%;
+  width: 3px;
+  transform: translateY(-50%);
+  border-radius: 9999px;
+  background: var(--primary);
 }
 
 /* Card: nền kem chuyển sắc nhẹ, viền ấm, bo góc mềm, đổ bóng dịu — gợi
@@ -226,23 +252,6 @@ body {
 /* Ô nhập & switch lấy tông ấm. */
 .theme-med [data-slot="input"] {
   background-color: #fffdf8;
-}
-
-/* Mục điều hướng đang chọn: nền cát + thanh đất nung bên trái. */
-.theme-med [data-slot="sidebar-menu-button"][data-active] {
-  font-weight: 600;
-  position: relative;
-}
-.theme-med [data-slot="sidebar-menu-button"][data-active]::before {
-  content: "";
-  position: absolute;
-  inset-inline-start: 0;
-  top: 50%;
-  height: 58%;
-  width: 3px;
-  transform: translateY(-50%);
-  border-radius: 9999px;
-  background: var(--primary);
 }
 
 /* =========================================================================

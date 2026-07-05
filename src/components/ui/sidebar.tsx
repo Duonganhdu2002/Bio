@@ -180,7 +180,8 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          overlayClassName="bg-[#2c2620]/20 supports-backdrop-filter:backdrop-blur-[2px]"
+          className="theme-med w-(--sidebar-width) border-sidebar-border !bg-sidebar p-0 text-sidebar-foreground shadow-[4px_0_24px_-8px_rgba(44,38,32,0.18)] [&>button]:hidden"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
