@@ -50,7 +50,9 @@ function CategorySectionPanel({
   meta,
   categories,
   draggingId,
+  overId,
   getItemProps,
+  getHandleProps,
   editingId,
   editName,
   onEditNameChange,
@@ -68,7 +70,9 @@ function CategorySectionPanel({
   meta: (typeof CATEGORY_SECTIONS)[number];
   categories: ProductCategory[];
   draggingId: string | null;
+  overId: string | null;
   getItemProps: (id: string) => Record<string, unknown>;
+  getHandleProps: (id: string) => Record<string, unknown>;
   editingId: string | null;
   editName: string;
   onEditNameChange: (value: string) => void;
@@ -126,11 +130,15 @@ function CategorySectionPanel({
                 <Card
                   size="sm"
                   className={cn(
-                    "flex-row items-center gap-2 px-3 py-2",
+                    "flex-row items-center gap-1.5 px-2 py-2 select-none sm:gap-2 sm:px-3",
                     draggingId === category.id && "opacity-50",
+                    overId === category.id &&
+                      draggingId !== null &&
+                      draggingId !== category.id &&
+                      "bg-muted/60",
                   )}
                 >
-                  <span className="cursor-grab text-muted-foreground active:cursor-grabbing">
+                  <span {...getHandleProps(category.id)}>
                     <GripVertical className="size-4" />
                   </span>
                   {editingId === category.id ? (
@@ -347,7 +355,9 @@ export function CategoriesManager({
             meta={meta}
             categories={categories}
             draggingId={sort.draggingId}
+            overId={sort.overId}
             getItemProps={sort.getItemProps}
+            getHandleProps={sort.getHandleProps}
             editingId={editingId}
             editName={editName}
             onEditNameChange={setEditName}
