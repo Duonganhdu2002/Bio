@@ -158,7 +158,7 @@ export function LinksManager({
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.links }),
   });
 
-  const { getItemProps, draggingId } = useSortableList({
+  const { getItemProps, getHandleProps, draggingId, overId } = useSortableList({
     items: links,
     onCommit: (ids) => reorderMut.mutate(ids),
   });
@@ -213,19 +213,23 @@ export function LinksManager({
                 <Card
                   size="sm"
                   className={cn(
-                    "flex-row items-center gap-2 px-3 py-2.5 transition-opacity",
+                    "flex-row items-center gap-1.5 px-2 py-2.5 transition-[opacity,background-color] select-none sm:gap-2 sm:px-3",
                     draggingId === link.id && "opacity-50",
+                    overId === link.id &&
+                      draggingId !== null &&
+                      draggingId !== link.id &&
+                      "bg-muted/60",
                     !link.is_active && "opacity-70",
                   )}
                 >
-                  <span className="cursor-grab text-muted-foreground active:cursor-grabbing">
+                  <span {...getHandleProps(link.id)}>
                     <GripVertical className="size-4" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <p className="truncate text-sm font-medium">{link.title}</p>
                       {label ? (
-                        <Badge variant="neutral" className="shrink-0">
+                        <Badge variant="neutral" className="hidden shrink-0 sm:inline-flex">
                           {label}
                         </Badge>
                       ) : null}
@@ -234,30 +238,33 @@ export function LinksManager({
                       {link.url}
                     </p>
                   </div>
-                  <Switch
-                    checked={link.is_active}
-                    onCheckedChange={(v) =>
-                      toggleMut.mutate({ id: link.id, isActive: v })
-                    }
-                    aria-label="Hiển thị công khai"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => openEdit(link)}
-                    aria-label="Sửa"
-                  >
-                    <Pencil />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => setDeleteTarget(link)}
-                    aria-label="Xoá"
-                  >
-                    <Trash2 />
-                  </Button>
+                  <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+                    <Switch
+                      checked={link.is_active}
+                      onCheckedChange={(v) =>
+                        toggleMut.mutate({ id: link.id, isActive: v })
+                      }
+                      aria-label="Hiển thị công khai"
+                      className="scale-90 sm:scale-100"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => openEdit(link)}
+                      aria-label="Sửa"
+                    >
+                      <Pencil />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setDeleteTarget(link)}
+                      aria-label="Xoá"
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
                 </Card>
               </li>
             );

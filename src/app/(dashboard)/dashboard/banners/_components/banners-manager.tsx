@@ -51,7 +51,9 @@ function BannerSectionPanel({
   meta,
   banners,
   draggingId,
+  overId,
   getItemProps,
+  getHandleProps,
   onAdd,
   onEdit,
   onDelete,
@@ -61,7 +63,9 @@ function BannerSectionPanel({
   meta: (typeof BANNER_SECTIONS)[number];
   banners: ProfileBanner[];
   draggingId: string | null;
+  overId: string | null;
   getItemProps: (id: string) => Record<string, unknown>;
+  getHandleProps: (id: string) => Record<string, unknown>;
   onAdd: () => void;
   onEdit: (banner: ProfileBanner) => void;
   onDelete: (banner: ProfileBanner) => void;
@@ -92,27 +96,31 @@ function BannerSectionPanel({
               <li key={banner.id} {...getItemProps(banner.id)}>
                 <div
                   className={cn(
-                    "flex items-center gap-2 px-3 py-2.5 transition-opacity",
+                    "flex items-center gap-1.5 px-2 py-2.5 transition-[opacity,background-color] select-none sm:gap-2 sm:px-3",
                     draggingId === banner.id && "opacity-50",
+                    overId === banner.id &&
+                      draggingId !== null &&
+                      draggingId !== banner.id &&
+                      "bg-muted/60",
                     !banner.is_active && "opacity-70",
                   )}
                 >
-                  <span className="cursor-grab text-muted-foreground active:cursor-grabbing">
+                  <span {...getHandleProps(banner.id)}>
                     <GripVertical className="size-4" />
                   </span>
-                  <div className="relative size-14 shrink-0 overflow-hidden rounded-sm border border-border bg-muted">
+                  <div className="relative size-11 shrink-0 overflow-hidden rounded-sm border border-border bg-muted sm:size-14">
                     <Image
                       src={banner.image_url}
                       alt=""
                       fill
                       className="object-cover"
-                      sizes="56px"
+                      sizes="(max-width: 640px) 44px, 56px"
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <p className="truncate text-sm font-medium">{banner.name}</p>
-                      <Badge variant="neutral" className="shrink-0">
+                      <Badge variant="neutral" className="hidden shrink-0 sm:inline-flex">
                         {meta.label}
                       </Badge>
                     </div>
@@ -122,28 +130,31 @@ function BannerSectionPanel({
                       <p className="text-xs text-muted-foreground">Không có liên kết</p>
                     )}
                   </div>
-                  <Switch
-                    checked={banner.is_active}
-                    onCheckedChange={(v) => onToggle(banner.id, v)}
-                    aria-label="Hiển thị công khai"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => onEdit(banner)}
-                    aria-label="Sửa"
-                  >
-                    <Pencil />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => onDelete(banner)}
-                    aria-label="Xoá"
-                  >
-                    <Trash2 />
-                  </Button>
+                  <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+                    <Switch
+                      checked={banner.is_active}
+                      onCheckedChange={(v) => onToggle(banner.id, v)}
+                      aria-label="Hiển thị công khai"
+                      className="scale-90 sm:scale-100"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => onEdit(banner)}
+                      aria-label="Sửa"
+                    >
+                      <Pencil />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => onDelete(banner)}
+                      aria-label="Xoá"
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
                 </div>
               </li>
             ))}
@@ -337,7 +348,9 @@ export function BannersManager({
               meta={meta}
               banners={banners}
               draggingId={sort.draggingId}
+              overId={sort.overId}
               getItemProps={sort.getItemProps}
+              getHandleProps={sort.getHandleProps}
               onAdd={() => openCreate(meta.value)}
               onEdit={openEdit}
               onDelete={setDeleteTarget}

@@ -303,24 +303,29 @@ export function ProductsManager({
   function ProductCard({
     product,
     dragging,
+    over,
+    getHandleProps,
   }: {
     product: Product;
     dragging: boolean;
+    over: boolean;
+    getHandleProps: (id: string) => Record<string, unknown>;
   }) {
     const priceLabel = formatPrice(product.price_cents, product.currency);
     return (
       <Card
         size="sm"
         className={cn(
-          "flex-row items-center gap-3 px-3 py-2.5 transition-opacity",
+          "flex-row items-center gap-1.5 px-2 py-2.5 transition-[opacity,background-color] select-none sm:gap-3 sm:px-3",
           dragging && "opacity-50",
+          over && "bg-muted/60",
           !product.is_active && "opacity-70",
         )}
       >
-        <span className="cursor-grab text-muted-foreground active:cursor-grabbing">
+        <span {...getHandleProps(product.id)}>
           <GripVertical className="size-4" />
         </span>
-        <div className="relative size-11 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
+        <div className="relative size-10 shrink-0 overflow-hidden rounded-md border border-border bg-muted sm:size-11">
           {product.image_url ? (
             <Image
               src={product.image_url}
@@ -356,40 +361,43 @@ export function ProductsManager({
             <p className="text-xs text-muted-foreground">{priceLabel}</p>
           ) : null}
         </div>
-        <Switch
-          checked={product.is_active}
-          onCheckedChange={(v) =>
-            toggleMut.mutate({ id: product.id, isActive: v })
-          }
-          aria-label="Hiển thị công khai"
-        />
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className={cn(product.is_pinned && "text-primary")}
-          onClick={() => togglePin(product)}
-          aria-label={product.is_pinned ? "Bỏ ghim" : "Ghim"}
-          title={product.is_pinned ? "Bỏ ghim" : "Ghim nổi bật"}
-        >
-          {product.is_pinned ? <PinOff /> : <Pin />}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => openEdit(product)}
-          aria-label="Sửa"
-        >
-          <Pencil />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-          onClick={() => setDeleteTarget(product)}
-          aria-label="Xoá"
-        >
-          <Trash2 />
-        </Button>
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+          <Switch
+            checked={product.is_active}
+            onCheckedChange={(v) =>
+              toggleMut.mutate({ id: product.id, isActive: v })
+            }
+            aria-label="Hiển thị công khai"
+            className="scale-90 sm:scale-100"
+          />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className={cn(product.is_pinned && "text-primary")}
+            onClick={() => togglePin(product)}
+            aria-label={product.is_pinned ? "Bỏ ghim" : "Ghim"}
+            title={product.is_pinned ? "Bỏ ghim" : "Ghim nổi bật"}
+          >
+            {product.is_pinned ? <PinOff /> : <Pin />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => openEdit(product)}
+            aria-label="Sửa"
+          >
+            <Pencil />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setDeleteTarget(product)}
+            aria-label="Xoá"
+          >
+            <Trash2 />
+          </Button>
+        </div>
       </Card>
     );
   }
@@ -429,6 +437,12 @@ export function ProductsManager({
                 <ProductCard
                   product={product}
                   dragging={pinnedSortable.draggingId === product.id}
+                  over={
+                    pinnedSortable.overId === product.id &&
+                    pinnedSortable.draggingId !== null &&
+                    pinnedSortable.draggingId !== product.id
+                  }
+                  getHandleProps={pinnedSortable.getHandleProps}
                 />
               </li>
             ))}
@@ -453,6 +467,12 @@ export function ProductsManager({
                 <ProductCard
                   product={product}
                   dragging={unpinnedSortable.draggingId === product.id}
+                  over={
+                    unpinnedSortable.overId === product.id &&
+                    unpinnedSortable.draggingId !== null &&
+                    unpinnedSortable.draggingId !== product.id
+                  }
+                  getHandleProps={unpinnedSortable.getHandleProps}
                 />
               </li>
             ))}
