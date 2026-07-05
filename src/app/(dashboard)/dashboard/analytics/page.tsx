@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { redirect } from "next/navigation";
 import dynamic from "next/dynamic";
 import type { Metadata } from "next";
@@ -12,6 +14,7 @@ import { getCurrentProfile } from "@/lib/auth";
 import {
   getDailySeries,
   getOverviewStats,
+  getTopBanners,
   getTopLinks,
   getTopProducts,
   parseRange,
@@ -20,6 +23,7 @@ import {
 import { PageHeader } from "@/components/dashboard/page-header";
 import { RangeTabs } from "@/components/dashboard/charts/range-tabs";
 import { TopList } from "@/components/dashboard/charts/top-list";
+import { Button } from "@/components/ui/button";
 
 // Chart chỉ tải ở route này (client) → không lọt vào bundle trang public.
 const SeriesChart = dynamic(() =>
@@ -59,14 +63,20 @@ export default async function AnalyticsPage({
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
 
-  const range = parseRange((await searchParams).range);
+  const params = await searchParams;
+  if (!params.range) {
+    redirect("/dashboard/analytics?range=1");
+  }
+
+  const range = parseRange(params.range);
   const periodLabel = rangePeriodLabel(range);
 
-  const [overview, series, topLinks, topProducts] = await Promise.all([
+  const [overview, series, topLinks, topProducts, topBanners] = await Promise.all([
     getOverviewStats(profile.id, range),
     getDailySeries(profile.id, range),
     getTopLinks(profile.id, range),
     getTopProducts(profile.id, range),
+    getTopBanners(profile.id, range),
   ]);
 
   const ctrPct = `${(overview.ctr * 100).toFixed(1)}%`;
@@ -110,26 +120,76 @@ export default async function AnalyticsPage({
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <Card>
-            <CardHeader>
-              <CardTitle>Top link</CardTitle>
-              <CardDescription>Link được bấm nhiều nhất</CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div>
+                <CardTitle>Top link</CardTitle>
+                <CardDescription>Link được bấm nhiều nhất</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="shrink-0"
+                render={<Link href={`/dashboard/analytics/links?range=${range}`} />}
+              >
+                Phân tích
+                <ArrowRight />
+              </Button>
             </CardHeader>
             <CardContent>
-              <TopList items={topLinks} />
+              <TopList
+                items={topLinks}
+                getHref={(item) => `/dashboard/analytics/links/${item.id}?range=${range}`}
+              />
             </CardContent>
           </Card>
           <Card>
-            <CardHeader>
-              <CardTitle>Top sản phẩm</CardTitle>
-              <CardDescription>Sản phẩm được bấm nhiều nhất</CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div>
+                <CardTitle>Top sản phẩm</CardTitle>
+                <CardDescription>Sản phẩm được bấm nhiều nhất</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="shrink-0"
+                render={<Link href={`/dashboard/analytics/products?range=${range}`} />}
+              >
+                Phân tích
+                <ArrowRight />
+              </Button>
             </CardHeader>
             <CardContent>
               <TopList
                 items={topProducts}
                 getHref={(item) =>
                   `/dashboard/analytics/products/${item.id}?range=${range}`
+                }
+              />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div>
+                <CardTitle>Top banner</CardTitle>
+                <CardDescription>Banner được bấm nhiều nhất</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="shrink-0"
+                render={<Link href={`/dashboard/analytics/banners?range=${range}`} />}
+              >
+                Phân tích
+                <ArrowRight />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <TopList
+                items={topBanners}
+                getHref={(item) =>
+                  `/dashboard/analytics/banners/${item.id}?range=${range}`
                 }
               />
             </CardContent>

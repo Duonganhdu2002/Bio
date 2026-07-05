@@ -22,6 +22,7 @@ type TemplateProps = {
   pinned: PublicPinnedProduct[];
   products: PublicProduct[];
   categories: PublicProductCategory[];
+  topProductIds?: string[];
 };
 
 /**
@@ -46,6 +47,7 @@ export function BioTemplate(props: TemplateProps) {
           pinned={props.pinned}
           products={props.products}
           categories={props.categories}
+          topProductIds={props.topProductIds}
         />
       </div>
     );

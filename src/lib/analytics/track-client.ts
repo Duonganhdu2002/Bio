@@ -12,7 +12,7 @@ const ENDPOINT = "/api/track";
 type TrackPayload = {
   profileId: string;
   type: "page_view" | "click";
-  targetType?: "link" | "product";
+  targetType?: "link" | "product" | "banner";
   targetId?: string;
   referrer?: string;
 };
@@ -48,10 +48,10 @@ export function trackPageView(profileId: string) {
   });
 }
 
-/** Ghi 1 lượt bấm vào link/sản phẩm trước khi điều hướng. */
+/** Ghi 1 lượt bấm vào link/sản phẩm/banner trước khi điều hướng. */
 export function trackClick(
   profileId: string,
-  targetType: "link" | "product",
+  targetType: "link" | "product" | "banner",
   targetId: string,
 ) {
   send({ profileId, type: "click", targetType, targetId });

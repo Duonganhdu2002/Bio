@@ -22,6 +22,7 @@ type LiveTemplateProps = {
   categories: PublicProductCategory[];
   pinned: PublicPinnedProduct[];
   products: PublicProduct[];
+  topProductIds?: string[];
 };
 
 const REFETCH_DEBOUNCE_MS = 350;
@@ -35,6 +36,7 @@ export function BioLiveTemplate({
   categories,
   pinned,
   products,
+  topProductIds = [],
 }: LiveTemplateProps) {
   const [state, setState] = useState({
     profile,
@@ -43,12 +45,13 @@ export function BioLiveTemplate({
     categories,
     pinned,
     products,
+    topProductIds,
   });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setState({ profile, links, banners, categories, pinned, products });
-  }, [profile, links, banners, categories, pinned, products]);
+    setState({ profile, links, banners, categories, pinned, products, topProductIds });
+  }, [profile, links, banners, categories, pinned, products, topProductIds]);
 
   useEffect(() => {
     const supabase = createPublicClient();
@@ -57,9 +60,10 @@ export function BioLiveTemplate({
     const refetch = () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(async () => {
-        const { data, error } = await supabase.rpc("get_public_profile", {
-          p_username: username,
-        });
+        const [{ data, error }, { data: topIds }] = await Promise.all([
+          supabase.rpc("get_public_profile", { p_username: username }),
+          supabase.rpc("get_public_top_products", { p_username: username, p_limit: 5 }),
+        ]);
         if (error || !data?.profile) return;
 
         const payload = data as PublicProfilePayload;
@@ -70,6 +74,7 @@ export function BioLiveTemplate({
           categories: payload.categories ?? [],
           pinned: payload.pinned,
           products: payload.products,
+          topProductIds: (topIds as string[] | null) ?? [],
         });
       }, REFETCH_DEBOUNCE_MS);
     };
@@ -142,6 +147,7 @@ export function BioLiveTemplate({
       categories={state.categories}
       pinned={state.pinned}
       products={state.products}
+      topProductIds={state.topProductIds}
     />
   );
 }

@@ -11,7 +11,13 @@ const LABEL: Record<AnalyticsRange, string> = {
   90: "90 ngày",
 };
 
-export function RangeTabs({ current }: { current: AnalyticsRange }) {
+export function RangeTabs({
+  current,
+  className,
+}: {
+  current: AnalyticsRange;
+  className?: string;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -23,11 +29,11 @@ export function RangeTabs({ current }: { current: AnalyticsRange }) {
   }
 
   return (
-    <Tabs value={String(current)} onValueChange={(value) => select(String(value))}>
-      <TabsList>
+    <Tabs value={String(current)} onValueChange={(value) => select(String(value))} className={className}>
+      <TabsList className="h-auto w-full min-w-0 flex-wrap gap-0.5 p-1 sm:w-fit sm:flex-nowrap">
         <TabsIndicator />
         {ANALYTICS_RANGES.map((range) => (
-          <TabsTab key={range} value={String(range)}>
+          <TabsTab key={range} value={String(range)} className="min-w-0 flex-1 px-2 text-xs sm:flex-none sm:px-2.5 sm:text-sm">
             {LABEL[range]}
           </TabsTab>
         ))}

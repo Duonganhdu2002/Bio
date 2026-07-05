@@ -29,7 +29,7 @@ export function ShopTabBar({
   return (
     <nav
       aria-label="Điều hướng cửa hàng"
-      className={cn("sticky top-11 z-10 border-t border-border bg-background", className)}
+      className={cn("sticky top-0 z-10 border-t border-border bg-background", className)}
     >
       <div role="tablist" className="grid grid-cols-3">
         {SHOP_TABS.map((item) => {
@@ -47,8 +47,8 @@ export function ShopTabBar({
               className={cn(
                 "flex h-11 items-center justify-center border-b outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset",
                 selected
-                  ? "border-foreground text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground",
+                  ? "border-secondary-foreground text-secondary-foreground"
+                  : "border-transparent text-muted-foreground hover:text-secondary-foreground",
               )}
             >
               <Icon className="size-[22px] stroke-[1.75]" aria-hidden />

@@ -62,7 +62,7 @@ const nav: NavItem[] = [
       p.startsWith("/dashboard/banners"),
   },
   {
-    href: "/dashboard/analytics",
+    href: "/dashboard/analytics?range=1",
     label: "Thống kê",
     icon: BarChart3,
     match: (p) => p.startsWith("/dashboard/analytics"),

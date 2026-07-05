@@ -8,11 +8,17 @@ import { Input } from "@/components/ui/input";
 import { FooterCta } from "./footer-cta";
 import { ShopCampaignStrip } from "./shop-campaign-strip";
 import { ShopCategoryList } from "./shop-category-list";
+import { ShopProductScrollSection } from "./shop-product-scroll-section";
 import { ShopProductTile } from "./shop-product-tile";
 import { ShopSectionHeader } from "./shop-section-header";
 import { ShopStoreHeader } from "./shop-store-header";
 import { ShopTabBar, type ShopTab } from "./shop-tab-bar";
-import { buildBrandNav, buildCategoryNav } from "./product-utils";
+import {
+  buildBrandNav,
+  buildCategoryNav,
+  getTopBrandProductRows,
+  getTopClickedProducts,
+} from "./product-utils";
 import { normalizeCategorySection } from "@/lib/category-section";
 import type {
   PublicBanner,
@@ -71,24 +77,16 @@ function ShopPinnedScroll({
   profileId: string;
   pinned: PublicPinnedProduct[];
 }) {
-  const items = pinned.slice(0, 6);
-  if (!items.length) return null;
-
   return (
-    <section aria-label="Nổi bật" className="pb-1">
-      <ShopSectionHeader title="Nổi bật" action="Xem thêm" className="pt-2" />
-      <div className="flex gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {items.map((product) => (
-          <ShopProductTile
-            key={product.id}
-            profileId={profileId}
-            product={product}
-            variant="scroll"
-            pinned
-          />
-        ))}
-      </div>
-    </section>
+    <ShopProductScrollSection
+      title="Nổi bật"
+      action="Xem thêm"
+      profileId={profileId}
+      products={pinned.slice(0, 6)}
+      ariaLabel="Nổi bật"
+      headerClassName="pt-2"
+      pinned
+    />
   );
 }
 
@@ -100,6 +98,7 @@ export function ShopLayout({
   pinned,
   products,
   categories = [],
+  topProductIds = [],
 }: {
   profile: PublicProfile;
   links: PublicLink[];
@@ -107,6 +106,7 @@ export function ShopLayout({
   pinned: PublicPinnedProduct[];
   products: PublicProduct[];
   categories?: PublicProductCategory[];
+  topProductIds?: string[];
 }) {
   const [tab, setTab] = useState<ShopTab>("shop");
   const [search, setSearch] = useState("");
@@ -178,12 +178,18 @@ export function ShopLayout({
     shouldScrollToPanelsRef.current = true;
   };
 
+  const topClickedProducts = useMemo(
+    () => getTopClickedProducts(products, topProductIds, 5),
+    [products, topProductIds],
+  );
+
+  const brandProductRows = useMemo(
+    () => getTopBrandProductRows(products, banners, 5),
+    [products, banners],
+  );
+
   return (
     <div className="mx-auto w-full max-w-lg overflow-x-hidden bg-background [scrollbar-gutter:stable]">
-      <div className="sticky top-0 z-20 flex h-11 shrink-0 items-center justify-center border-b border-border bg-background/95 backdrop-blur-sm">
-        <span className="text-sm font-semibold text-foreground">@{profile.username}</span>
-      </div>
-
       <ShopStoreHeader
         profile={profile}
         productCount={products.length}
@@ -202,11 +208,32 @@ export function ShopLayout({
         }}
       />
 
-      <div ref={panelsRef} className="scroll-mt-[5.5rem]">
+      <div ref={panelsRef} className="scroll-mt-11">
       {tab === "shop" ? (
         <div className="flex flex-col divide-y divide-border/40">
           <ShopPinnedScroll profileId={profile.id} pinned={pinned} />
-          <ShopCampaignStrip banners={banners} onBrandSelect={handleBrandSelect} />
+          <ShopCampaignStrip
+            profileId={profile.id}
+            banners={banners}
+            onBrandSelect={handleBrandSelect}
+          />
+          <ShopProductScrollSection
+            title="Bán chạy"
+            action="Top 5"
+            profileId={profile.id}
+            products={topClickedProducts}
+            ariaLabel="Sản phẩm bán chạy"
+          />
+          {brandProductRows.map((row) => (
+            <ShopProductScrollSection
+              key={row.brandId}
+              title={row.brandName}
+              action={`${row.products.length} Sản phẩm`}
+              profileId={profile.id}
+              products={row.products}
+              ariaLabel={`Sản phẩm ${row.brandName}`}
+            />
+          ))}
         </div>
       ) : null}
 
@@ -260,7 +287,7 @@ export function ShopLayout({
                 >
                   <ChevronLeft aria-hidden />
                 </Button>
-                <h2 className="text-sm font-semibold text-foreground">{activeCategoryLabel}</h2>
+                <h2 className="text-sm font-semibold text-secondary-foreground">{activeCategoryLabel}</h2>
               </div>
               <ShopProductGrid
                 profileId={profile.id}

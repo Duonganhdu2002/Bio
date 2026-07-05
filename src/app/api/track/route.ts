@@ -11,7 +11,7 @@ export const runtime = "edge";
 type TrackBody = {
   profileId?: string;
   type?: "page_view" | "click";
-  targetType?: "link" | "product";
+  targetType?: "link" | "product" | "banner";
   targetId?: string;
   referrer?: string;
 };
@@ -54,7 +54,9 @@ export async function POST(request: Request) {
   const device = parseDevice(request.headers.get("user-agent"));
 
   const targetType =
-    body.targetType === "link" || body.targetType === "product"
+    body.targetType === "link" ||
+    body.targetType === "product" ||
+    body.targetType === "banner"
       ? body.targetType
       : null;
   const targetId =

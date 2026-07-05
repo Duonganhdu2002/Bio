@@ -69,6 +69,53 @@ export function groupProductsByCategory(
   return groups.filter((g) => g.products.length > 0);
 }
 
+export type BrandProductRow = {
+  brandId: string;
+  brandName: string;
+  products: PublicProduct[];
+};
+
+export function getTopBrandProductRows(
+  products: PublicProduct[],
+  banners: PublicBanner[],
+  limit = 5,
+): BrandProductRow[] {
+  const brandBanners = banners
+    .filter((b) => (b.section ?? "for_you") === "brand")
+    .sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
+
+  return brandBanners
+    .map((b) => ({
+      brandId: b.id,
+      brandName: b.name,
+      products: products
+        .filter((p) => p.brand_id === b.id)
+        .sort((a, b) => a.position - b.position || a.title.localeCompare(b.title, "vi")),
+    }))
+    .filter((row) => row.products.length > 0)
+    .sort(
+      (a, b) =>
+        b.products.length - a.products.length ||
+        a.brandName.localeCompare(b.brandName, "vi"),
+    )
+    .slice(0, limit);
+}
+
+export function getTopClickedProducts(
+  products: PublicProduct[],
+  topProductIds: string[],
+  limit = 5,
+): PublicProduct[] {
+  const byId = new Map(products.map((p) => [p.id, p]));
+  const result: PublicProduct[] = [];
+  for (const id of topProductIds) {
+    const product = byId.get(id);
+    if (product) result.push(product);
+    if (result.length >= limit) break;
+  }
+  return result;
+}
+
 export function buildBrandNav(
   products: PublicProduct[],
   banners: PublicBanner[],

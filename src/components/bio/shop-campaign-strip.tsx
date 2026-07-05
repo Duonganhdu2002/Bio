@@ -3,30 +3,37 @@
 import Image from "next/image";
 
 import { BANNER_SECTIONS } from "@/lib/banner-section";
+import { trackClick } from "@/lib/analytics/track-client";
 import { cn } from "@/lib/utils";
 import { ShopSectionHeader } from "./shop-section-header";
 import type { PublicBanner } from "./types";
 
-function CampaignCard({ banner }: { banner: PublicBanner }) {
+function CampaignCard({
+  banner,
+  profileId,
+}: {
+  banner: PublicBanner;
+  profileId: string;
+}) {
   const content = (
     <>
-      <div className="relative aspect-[5/3] w-full overflow-hidden rounded-2xl bg-muted">
+      <div className="relative aspect-[5/3] w-full overflow-hidden rounded-xl bg-muted">
         <Image
           src={banner.image_url}
           alt={banner.name}
           fill
           className="object-cover"
-          sizes="176px"
+          sizes="128px"
         />
       </div>
-      <p className="mt-2 line-clamp-2 px-0.5 text-[13px] leading-snug text-foreground">
+      <p className="mt-1.5 line-clamp-2 px-0.5 text-[11px] leading-snug text-secondary-foreground/90">
         {banner.name}
       </p>
     </>
   );
 
   const className = cn(
-    "block w-44 shrink-0",
+    "block w-32 shrink-0",
     banner.url && "transition-opacity hover:opacity-80",
   );
 
@@ -36,7 +43,12 @@ function CampaignCard({ banner }: { banner: PublicBanner }) {
         href={banner.url}
         target="_blank"
         rel="noopener noreferrer nofollow"
-        className={cn(className, "outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2")}
+        onClick={() => trackClick(profileId, "banner", banner.id)}
+        onAuxClick={() => trackClick(profileId, "banner", banner.id)}
+        className={cn(
+          className,
+          "outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2",
+        )}
       >
         {content}
       </a>
@@ -48,23 +60,25 @@ function CampaignCard({ banner }: { banner: PublicBanner }) {
 
 function BrandCard({
   banner,
+  profileId,
   onSelect,
 }: {
   banner: PublicBanner;
+  profileId: string;
   onSelect?: (brandId: string) => void;
 }) {
   const content = (
     <>
-      <div className="relative mx-auto size-20 overflow-hidden rounded-full border border-border/60 bg-muted">
+      <div className="relative mx-auto size-14 overflow-hidden rounded-full border border-border/60 bg-muted">
         <Image
           src={banner.image_url}
           alt={banner.name}
           fill
           className="object-cover"
-          sizes="80px"
+          sizes="56px"
         />
       </div>
-      <p className="mt-2 line-clamp-2 text-center text-[13px] leading-snug text-foreground">
+      <p className="mt-1 line-clamp-2 text-center text-[11px] leading-snug text-secondary-foreground/90">
         {banner.name}
       </p>
     </>
@@ -73,9 +87,12 @@ function BrandCard({
   return (
     <button
       type="button"
-      onClick={() => onSelect?.(banner.id)}
+      onClick={() => {
+        trackClick(profileId, "banner", banner.id);
+        onSelect?.(banner.id);
+      }}
       className={cn(
-        "block w-24 shrink-0 text-left transition-opacity hover:opacity-80",
+        "block w-[4.25rem] shrink-0 text-left transition-opacity hover:opacity-80",
         "outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2",
       )}
     >
@@ -87,6 +104,7 @@ function BrandCard({
 function BannerScrollSection({
   title,
   banners,
+  profileId,
   ariaLabel,
   first,
   variant = "campaign",
@@ -94,6 +112,7 @@ function BannerScrollSection({
 }: {
   title: string;
   banners: PublicBanner[];
+  profileId: string;
   ariaLabel: string;
   first?: boolean;
   variant?: "campaign" | "brand";
@@ -102,14 +121,22 @@ function BannerScrollSection({
   if (!banners.length) return null;
 
   return (
-    <section aria-label={ariaLabel} className="pb-2">
-      <ShopSectionHeader title={title} className={first ? "pt-2" : undefined} />
-      <div className="flex gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <section aria-label={ariaLabel} className="pb-1">
+      <ShopSectionHeader
+        title={title}
+        className={cn("pb-2", first ? "pt-2" : "pt-3")}
+      />
+      <div className="flex gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {banners.map((banner) =>
           variant === "brand" ? (
-            <BrandCard key={banner.id} banner={banner} onSelect={onBrandSelect} />
+            <BrandCard
+              key={banner.id}
+              banner={banner}
+              profileId={profileId}
+              onSelect={onBrandSelect}
+            />
           ) : (
-            <CampaignCard key={banner.id} banner={banner} />
+            <CampaignCard key={banner.id} banner={banner} profileId={profileId} />
           ),
         )}
       </div>
@@ -123,9 +150,11 @@ function sortBanners(items: PublicBanner[]) {
 
 /** Banner cuộn ngang tối giản — Gợi ý + Brand. */
 export function ShopCampaignStrip({
+  profileId,
   banners,
   onBrandSelect,
 }: {
+  profileId: string;
   banners: PublicBanner[];
   onBrandSelect?: (brandId: string) => void;
 }) {
@@ -142,12 +171,14 @@ export function ShopCampaignStrip({
       <BannerScrollSection
         title={forYouMeta.shopTitle}
         banners={forYou}
+        profileId={profileId}
         ariaLabel={forYouMeta.shopTitle}
         first
       />
       <BannerScrollSection
         title={brandMeta.shopTitle}
         banners={brand}
+        profileId={profileId}
         ariaLabel={brandMeta.shopTitle}
         first={!forYou.length}
         variant="brand"

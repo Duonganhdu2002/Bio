@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import dynamic from "next/dynamic";
 import type { Metadata } from "next";
-import { ArrowLeft, ExternalLink, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ExternalLink, ImageIcon } from "lucide-react";
 
 import {
   Card,
@@ -13,12 +13,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { formatPrice } from "@/components/bio/price";
+import { bannerSectionLabel } from "@/lib/banner-section";
 import { getCurrentProfile } from "@/lib/auth";
 import {
-  getProductClickSeries,
-  getProductClickTotal,
-  getProductForAnalytics,
+  getBannerClickSeries,
+  getBannerClickTotal,
+  getBannerForAnalytics,
   parseRange,
   rangePeriodLabel,
 } from "@/lib/analytics/queries";
@@ -30,52 +30,51 @@ const SeriesChart = dynamic(() =>
 );
 
 type PageProps = {
-  params: Promise<{ productId: string }>;
+  params: Promise<{ bannerId: string }>;
   searchParams: Promise<{ range?: string }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const profile = await getCurrentProfile();
-  if (!profile) return { title: "Sản phẩm" };
+  if (!profile) return { title: "Banner" };
 
-  const { productId } = await params;
-  const product = await getProductForAnalytics(profile.id, productId);
-  return { title: product ? product.title : "Sản phẩm" };
+  const { bannerId } = await params;
+  const banner = await getBannerForAnalytics(profile.id, bannerId);
+  return { title: banner ? banner.name : "Banner" };
 }
 
-export default async function ProductAnalyticsPage({ params, searchParams }: PageProps) {
+export default async function BannerAnalyticsPage({ params, searchParams }: PageProps) {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
 
-  const { productId } = await params;
+  const { bannerId } = await params;
   const range = parseRange((await searchParams).range);
   const periodLabel = rangePeriodLabel(range);
 
-  const product = await getProductForAnalytics(profile.id, productId);
-  if (!product) notFound();
+  const banner = await getBannerForAnalytics(profile.id, bannerId);
+  if (!banner) notFound();
 
   const [series, totalClicks] = await Promise.all([
-    getProductClickSeries(profile.id, productId, range),
-    getProductClickTotal(profile.id, productId, range),
+    getBannerClickSeries(profile.id, bannerId, range),
+    getBannerClickTotal(profile.id, bannerId, range),
   ]);
   const hasDailyChart = series.some((p) => p.clicks > 0);
-  const price = formatPrice(product.price_cents, product.currency);
 
   return (
     <>
       <PageHeader
-        eyebrow="Phân tích sản phẩm"
-        title={product.title}
-        description="Lượt bấm từ trang bio tới liên kết sản phẩm này."
+        eyebrow="Phân tích banner"
+        title={banner.name}
+        description="Lượt bấm từ trang cửa hàng tới banner này."
         action={
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              render={<Link href={`/dashboard/analytics/products?range=${range}`} />}
+              render={<Link href={`/dashboard/analytics/banners?range=${range}`} />}
             >
               <ArrowLeft />
-              Sản phẩm
+              Banner
             </Button>
             <RangeTabs current={range} />
           </div>
@@ -86,34 +85,34 @@ export default async function ProductAnalyticsPage({ params, searchParams }: Pag
         <Card>
           <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className="relative aspect-[5/3] w-full shrink-0 overflow-hidden rounded-xl bg-muted sm:w-44">
-              {product.image_url ? (
+              {banner.image_url ? (
                 <Image
-                  src={product.image_url}
-                  alt={product.title}
+                  src={banner.image_url}
+                  alt={banner.name}
                   fill
                   sizes="176px"
-                  className="object-contain"
+                  className="object-cover"
                 />
               ) : (
                 <div className="flex size-full items-center justify-center text-muted-foreground">
-                  <ShoppingBag className="size-8" aria-hidden />
+                  <ImageIcon className="size-8" aria-hidden />
                 </div>
               )}
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-2">
-              {price ? (
-                <p className="text-lg font-semibold tabular-nums">{price}</p>
-              ) : null}
-              {product.description ? (
-                <p className="line-clamp-3 text-sm text-muted-foreground">{product.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {bannerSectionLabel(banner.section)}
+              </p>
+              {banner.url ? (
+                <p className="truncate text-sm text-muted-foreground">{banner.url}</p>
               ) : null}
               <div className="flex flex-wrap items-center gap-2 pt-1">
-                {product.url ? (
+                {banner.url ? (
                   <Button
                     variant="outline"
                     size="sm"
                     render={
-                      <a href={product.url} target="_blank" rel="noopener noreferrer nofollow" />
+                      <a href={banner.url} target="_blank" rel="noopener noreferrer nofollow" />
                     }
                   >
                     <ExternalLink />
@@ -123,40 +122,35 @@ export default async function ProductAnalyticsPage({ params, searchParams }: Pag
                 <Button
                   variant="ghost"
                   size="sm"
-                  render={<Link href="/dashboard/content#products" />}
+                  render={<Link href="/dashboard/content#banners" />}
                 >
-                  Chỉnh sửa sản phẩm
+                  Chỉnh sửa banner
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Card size="sm">
-            <CardContent className="flex flex-col gap-3">
-              <span
-                className="h-1 w-9 rounded-full bg-[#1e6e89]"
-                aria-hidden
-              />
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                Lượt bấm
-              </span>
-              <span className="font-heading text-[1.9rem] font-semibold leading-none tabular-nums">
-                {totalClicks.toLocaleString("vi-VN")}
-              </span>
-              <span className="text-xs text-muted-foreground">{periodLabel}</span>
-            </CardContent>
-          </Card>
-        </div>
+        <Card size="sm">
+          <CardContent className="flex flex-col gap-3">
+            <span className="h-1 w-9 rounded-full bg-[#1e6e89]" aria-hidden />
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+              Lượt bấm
+            </span>
+            <span className="font-heading text-[1.9rem] font-semibold leading-none tabular-nums">
+              {totalClicks.toLocaleString("vi-VN")}
+            </span>
+            <span className="text-xs text-muted-foreground">{periodLabel}</span>
+          </CardContent>
+        </Card>
 
         {hasDailyChart ? (
           <Card>
             <CardHeader>
-              <CardTitle>Theo ngày</CardTitle>
+              <CardTitle>{range === 1 ? "Lượt bấm hôm nay" : "Theo ngày"}</CardTitle>
               <CardDescription>{periodLabel}</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="min-w-0">
               <SeriesChart data={series} clicksOnly compactSingleDay={range === 1} />
             </CardContent>
           </Card>

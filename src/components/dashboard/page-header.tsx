@@ -27,7 +27,7 @@ export function PageHeader({
             </p>
           ) : null}
         </div>
-        {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}
+        {action ? <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto">{action}</div> : null}
       </div>
       <div className="mt-4 h-px w-full bg-gradient-to-r from-border via-border/50 to-transparent" />
     </div>

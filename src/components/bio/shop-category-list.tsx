@@ -32,7 +32,7 @@ function CategoryRows({
             className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset"
           >
             <span className="min-w-0">
-              <span className="block text-sm font-medium text-foreground">{item.label}</span>
+              <span className="block text-sm font-medium text-secondary-foreground">{item.label}</span>
               <span className="block text-xs text-muted-foreground">{item.count} sản phẩm</span>
             </span>
             <span className="flex shrink-0 items-center gap-1 text-xs tabular-nums text-muted-foreground">

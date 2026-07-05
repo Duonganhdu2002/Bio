@@ -14,7 +14,7 @@ export function ShopSectionHeader({
 }) {
   return (
     <div className={cn("flex items-center justify-between px-4 pb-3 pt-5", className)}>
-      <h2 className="text-[15px] font-semibold tracking-tight text-foreground">{title}</h2>
+      <h2 className="text-[15px] font-semibold tracking-tight text-secondary-foreground">{title}</h2>
       {action ? (
         <div className="text-xs font-normal text-muted-foreground">{action}</div>
       ) : null}

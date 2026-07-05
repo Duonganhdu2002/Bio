@@ -61,7 +61,7 @@ export function ShopProductTile({
       <div className={cn(isScroll ? "mt-2.5 space-y-0.5 px-0.5" : "space-y-1 p-2.5")}>
         <h3
           className={cn(
-            "line-clamp-2 text-foreground",
+            "line-clamp-2 text-secondary-foreground/90",
             isScroll ? "text-[13px] leading-snug" : "min-h-8 text-xs leading-snug",
           )}
         >
@@ -70,7 +70,7 @@ export function ShopProductTile({
         {price ? (
           <p
             className={cn(
-              isScroll ? "text-[13px] text-muted-foreground" : "text-sm font-semibold text-foreground",
+              isScroll ? "text-[13px] text-muted-foreground" : "text-sm font-semibold text-secondary-foreground",
             )}
           >
             {price}

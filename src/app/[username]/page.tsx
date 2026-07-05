@@ -36,12 +36,17 @@ const loadProfile = cache((username: string) =>
   unstable_cache(
     async () => {
       const supabase = createPublicClient();
-      const { data, error } = await supabase.rpc("get_public_profile", {
-        p_username: username,
-      });
+      const [{ data, error }, { data: topIds }] = await Promise.all([
+        supabase.rpc("get_public_profile", { p_username: username }),
+        supabase.rpc("get_public_top_products", { p_username: username, p_limit: 5 }),
+      ]);
       if (error || !data) return null;
       const payload = data as PublicProfilePayload;
-      return payload.profile ? payload : null;
+      if (!payload.profile) return null;
+      return {
+        payload,
+        topProductIds: (topIds as string[] | null) ?? [],
+      };
     },
     ["public-profile", username],
     { revalidate: 60, tags: [`profile:${username}`] },
@@ -53,10 +58,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const username = parseUsername(raw);
   if (!username) return { title: "Không tìm thấy trang", robots: { index: false, follow: false } };
 
-  const payload = await loadProfile(username);
-  if (!payload) return { title: "Không tìm thấy trang", robots: { index: false, follow: false } };
+  const loaded = await loadProfile(username);
+  if (!loaded) return { title: "Không tìm thấy trang", robots: { index: false, follow: false } };
 
-  const { profile } = payload;
+  const { profile } = loaded.payload;
   const title = profile.display_name?.trim() || `@${profile.username}`;
   const description =
     profile.bio?.trim() || `Trang link cá nhân của @${profile.username} trên Bio.`;
@@ -88,10 +93,10 @@ export default async function PublicBioPage({ params }: PageProps) {
   const username = parseUsername(raw);
   if (!username) notFound();
 
-  const payload = await loadProfile(username);
-  if (!payload) notFound();
+  const loaded = await loadProfile(username);
+  if (!loaded) notFound();
 
-  const { profile, links, banners = [], categories = [], pinned, products } = payload;
+  const { profile, links, banners = [], categories = [], pinned, products } = loaded.payload;
 
   return (
     <main
@@ -110,6 +115,7 @@ export default async function PublicBioPage({ params }: PageProps) {
         categories={categories}
         pinned={pinned}
         products={products}
+        topProductIds={loaded.topProductIds}
       />
     </main>
   );

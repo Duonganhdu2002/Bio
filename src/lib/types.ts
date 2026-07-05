@@ -79,7 +79,7 @@ export interface ProfileBanner {
 }
 
 export type EventType = "page_view" | "click";
-export type EventTargetType = "link" | "product" | null;
+export type EventTargetType = "link" | "product" | "banner" | null;
 
 export interface AnalyticsEvent {
   id: number;
