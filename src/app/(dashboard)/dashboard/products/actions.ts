@@ -91,7 +91,7 @@ async function prepare(
   const price_cents =
     input.price != null ? toPriceCents(input.price, currency) : null;
 
-  let category_id: string | null = input.categoryId || null;
+  const category_id: string | null = input.categoryId || null;
   if (category_id) {
     const { data: cat } = await supabase
       .from("product_categories")
@@ -102,7 +102,7 @@ async function prepare(
     if (!cat || cat.section !== "product") return fail("Danh mục không hợp lệ.");
   }
 
-  let brand_id: string | null = input.brandId || null;
+  const brand_id: string | null = input.brandId || null;
   if (brand_id) {
     const { data: brand } = await supabase
       .from("profile_banners")
@@ -146,7 +146,7 @@ export async function importProductFromUrl(
     let imageWarning: string | null = null;
 
     if (metadata.imageUrl) {
-      imageUrl = await mirrorProductImage(metadata.imageUrl, ctx.profile.id);
+      imageUrl = await mirrorProductImage(metadata.imageUrl, ctx.profile.id).catch(() => null);
       if (!imageUrl) {
         imageWarning =
           "Không tải được ảnh tự động. Bạn có thể bấm \"Chọn ảnh\" để upload thủ công.";
