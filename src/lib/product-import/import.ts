@@ -6,7 +6,7 @@ export type ProductMetadata = {
   price: number | null;
   currency: string;
   imageUrl: string | null;
-  /** URL trang sản phẩm thật sau khi resolve link rút gọn. */
+  /** URL dùng cho nút mua hàng, giữ tracking của link Shopee ban đầu. */
   sourceUrl: string;
 };
 
@@ -53,9 +53,6 @@ const IMAGE_HOSTS = new Set(["cf.shopee.vn"]);
 const MOBILE_UA =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1";
 
-/** Bot preview (Zalo/Messenger) — Shopee redirect link rút gọn sang trang sản phẩm thật. */
-const CRAWLER_UA = "Mozilla/5.0 (compatible; ZaloBot/1.0)";
-
 /** Bot social preview (Facebook/Zalo card) — Shopee trả SSR + Open Graph cho trang sản phẩm. */
 const PREVIEW_BOT_UA = "Mozilla/5.0 (compatible; facebookexternalhit/1.1)";
 
@@ -88,8 +85,7 @@ export async function fetchProductMetadata(url: string): Promise<ProductMetadata
   const host = parsed.hostname.toLowerCase();
 
   if (isShopeeHost(host)) {
-    const productUrl = await resolveShopeeProductUrl(url);
-    return fetchShopeeMetadata(productUrl);
+    return fetchShopeeMetadata(url);
   }
   if (isTiktokHost(host)) {
     const resolved = await resolveProductUrl(url);
@@ -132,47 +128,47 @@ export async function mirrorProductImage(
   return data.publicUrl;
 }
 
-async function fetchShopeeMetadata(url: string): Promise<ProductMetadata> {
-  if (/\/error_page/i.test(url)) {
-    throw new Error("Link Shopee không còn hoạt động. Hãy dán link sản phẩm đầy đủ từ shopee.vn.");
+async function fetchShopeeMetadata(sourceUrl: string): Promise<ProductMetadata> {
+  const resolved = new URL(await resolveShopeeProductUrl(sourceUrl));
+  const ids = extractShopeeIds(resolved.href);
+  const candidates = new Set<string>();
+  if (ids) {
+    // Shopee publishes its share card here even when the storefront is a JS shell.
+    candidates.add(`${resolved.origin}/universal-link/product/${ids.shopId}/${ids.itemId}`);
+    candidates.add(`${resolved.origin}/product-i.${ids.shopId}.${ids.itemId}`);
   }
+  candidates.add(resolved.href);
 
-  let html = "";
-  let meta: Record<string, string> = {};
-
-  // Shopee chỉ SSR Open Graph cho social preview bots (Facebook/Zalo card), không phải mobile UA.
-  for (const ua of [PREVIEW_BOT_UA, CRAWLER_UA]) {
+  for (const url of candidates) {
     const res = await fetchWithTimeout(url, {
+      redirect: "manual",
       headers: {
-        "User-Agent": ua,
+        "User-Agent": PREVIEW_BOT_UA,
         Accept: "text/html",
         "Accept-Language": "vi-VN,vi;q=0.9",
       },
-    });
-    if (!res.ok) continue;
+    }).catch(() => null);
+    if (!res?.ok) {
+      await res?.body?.cancel();
+      continue;
+    }
 
-    html = await readLimitedText(res, MAX_HTML_BYTES);
-    meta = parseMetaTags(html);
-    const candidate = cleanShopeeTitle(meta["og:title"] ?? meta["twitter:title"] ?? "");
-    if (candidate && !isGenericShopeeMetadata(candidate, meta)) break;
+    const html = await readLimitedText(res, MAX_HTML_BYTES);
+    const meta = parseMetaTags(html);
+    const title = cleanShopeeTitle(meta["og:title"] ?? meta["twitter:title"] ?? "");
+    if (!title || isGenericShopeeMetadata(title, meta)) continue;
+
+    const rawImage = meta["og:image"] ?? meta["twitter:image"];
+    const imageUrl = isShopeeBrandImage(rawImage)
+      ? extractShopeeImageFromHtml(html)
+      : normalizeImageUrl(rawImage) ?? extractShopeeImageFromHtml(html);
+    const description = cleanShopeeDescription(meta["og:description"] ?? null);
+    const price = extractShopeePrice(html, meta);
+    const currency = meta["product:price:currency"]?.toUpperCase() || "VND";
+
+    return { title, description, price, currency, imageUrl, sourceUrl };
   }
-
-  const title = cleanShopeeTitle(meta["og:title"] ?? meta["twitter:title"] ?? "");
-  if (!title || isGenericShopeeMetadata(title, meta)) {
-    throw new Error(
-      "Không đọc được thông tin sản phẩm. Hãy thử lại hoặc dán link đầy đủ từ trang sản phẩm Shopee.",
-    );
-  }
-
-  const rawImage = meta["og:image"] ?? meta["twitter:image"];
-  const imageUrl = isShopeeBrandImage(rawImage)
-    ? extractShopeeImageFromHtml(html)
-    : normalizeImageUrl(rawImage) ?? extractShopeeImageFromHtml(html);
-  const description = cleanShopeeDescription(meta["og:description"] ?? null);
-  const price = extractShopeePrice(html, meta);
-  const currency = meta["product:price:currency"]?.toUpperCase() || "VND";
-
-  return { title, description, price, currency, imageUrl, sourceUrl: url };
+  throw new Error("Shopee chưa cung cấp thông tin xem trước. Bạn có thể giữ link và nhập tên, ảnh thủ công.");
 }
 
 async function fetchTiktokMetadata(url: string): Promise<ProductMetadata> {
@@ -256,32 +252,29 @@ async function fetchTiktokOembed(url: string): Promise<ProductMetadata> {
 }
 
 async function resolveShopeeProductUrl(raw: string): Promise<string> {
-  if (/\/error_page/i.test(raw)) {
-    throw new Error("Link Shopee không còn hoạt động. Hãy dán link sản phẩm đầy đủ từ shopee.vn.");
+  let current = new URL(raw);
+  for (let i = 0; i <= MAX_REDIRECTS; i++) {
+    assertAllowedProductUrl(current.href);
+    if (!isShopeeHost(current.hostname)) throw new Error("Link không dẫn đến Shopee.");
+    if (/\/error_page/i.test(current.pathname)) {
+      throw new Error("Link Shopee không còn hoạt động.");
+    }
+    if (!isShopeeShortHost(current.hostname)) return current.href;
+
+    const res = await fetchWithTimeout(current.href, { redirect: "manual" });
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.get("location");
+      await res.body?.cancel();
+      if (!location) break;
+      current = new URL(location, current);
+      continue;
+    }
+    if (!res.ok) break;
+    const destination = extractShopeeConfigUrl(await readLimitedText(res, MAX_HTML_BYTES));
+    if (!destination) return current.href;
+    current = new URL(destination, current);
   }
-
-  let current = raw;
-  const host = new URL(raw).hostname.toLowerCase();
-
-  // Link rút gọn: dùng bot UA để nhận redirect 301 (giống Zalo/Messenger preview).
-  if (isShopeeShortHost(host)) {
-    current = await followRedirects(raw, CRAWLER_UA);
-  }
-
-  // Trang ULS (s.shopee.vn) nhúng URL thật trong CONFIG.httpUrl.
-  if (isShopeeShortHost(new URL(current).hostname.toLowerCase())) {
-    const html = await fetchHtml(current, MOBILE_UA);
-    const httpUrl = extractShopeeConfigUrl(html);
-    if (httpUrl) current = httpUrl;
-  }
-
-  const ids = extractShopeeIds(current);
-  if (ids) {
-    const shopeeHost = new URL(current).hostname;
-    return buildShopeeProductUrl(ids.shopId, ids.itemId, shopeeHost);
-  }
-
-  return current;
+  throw new Error("Không mở được link rút gọn Shopee. Hãy thử link từ trang sản phẩm.");
 }
 
 async function resolveProductUrl(raw: string): Promise<string> {
@@ -380,46 +373,8 @@ async function fetchImage(url: string): Promise<Response> {
   }
 }
 
-async function followRedirects(raw: string, userAgent: string): Promise<string> {
-  let current = raw;
-  for (let i = 0; i < MAX_REDIRECTS; i++) {
-    assertAllowedProductUrl(current);
-    const res = await fetchWithTimeout(current, {
-      method: "GET",
-      redirect: "manual",
-      headers: { "User-Agent": userAgent },
-    });
-
-    if (res.status >= 300 && res.status < 400) {
-      const location = res.headers.get("location");
-      if (!location) break;
-      current = new URL(location, current).toString();
-      if (/\/error_page/i.test(current)) {
-        throw new Error("Link Shopee không còn hoạt động. Hãy dán link sản phẩm đầy đủ từ shopee.vn.");
-      }
-      continue;
-    }
-
-    if (res.status >= 200 && res.status < 300) return current;
-    throw new Error("Link sản phẩm không hợp lệ hoặc đã bị xoá.");
-  }
-  return current;
-}
-
-async function fetchHtml(url: string, userAgent: string): Promise<string> {
-  assertAllowedProductUrl(url);
-  const res = await fetchWithTimeout(url, {
-    headers: {
-      "User-Agent": userAgent,
-      "Accept-Language": "vi-VN,vi;q=0.9",
-    },
-  });
-  if (!res.ok) throw new Error("Không mở được trang Shopee.");
-  return readLimitedText(res, MAX_HTML_BYTES);
-}
-
 function extractShopeeConfigUrl(html: string): string | null {
-  const match = html.match(/httpUrl\s*:\s*"((?:\\.|[^"\\])+)"/);
+  const match = html.match(/["']?httpUrl["']?\s*:\s*"((?:\\.|[^"\\])+)"/);
   if (!match?.[1]) return null;
   try {
     return JSON.parse(`"${match[1]}"`) as string;
@@ -451,14 +406,6 @@ function extractShopeeIds(url: string): { shopId: string; itemId: string } | nul
     }
   }
   return null;
-}
-
-function buildShopeeProductUrl(
-  shopId: string,
-  itemId: string,
-  host: string,
-): string {
-  return `https://${host}/product-i.${shopId}.${itemId}`;
 }
 
 function isShopeeShortHost(host: string): boolean {
